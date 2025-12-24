@@ -1,7 +1,7 @@
 const ServicesSection = () => {
   return (
     <section className="section-padding" style={{ backgroundColor: '#2d3748' }}>
-      <div className="container-max max-w-6xl">
+      <div className="container-max mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="w-20 h-20 mx-auto mb-4">

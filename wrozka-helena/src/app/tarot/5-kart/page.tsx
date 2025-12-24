@@ -3,23 +3,31 @@
 import { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import TarotCardDeck from '@/components/TarotCardDeck';
+import CrossSpreadLayout from '@/components/CrossSpreadLayout';
+import { getCardsByIds, type TarotCard } from '@/lib/tarotDeck';
+import { createUserProfile, getAstrologicalContext, zodiacData, type UserProfile } from '@/lib/seedData';
 
-// Sample tarot card images for demonstration
-const sampleCards = [
-  'https://ext.same-assets.com/3736986635/1716170053.jpeg', // Four of Swords
-  'https://ext.same-assets.com/3736986635/2902686682.jpeg', // Five of Pentacles
-  'https://ext.same-assets.com/3736986635/1068553693.jpeg', // Ten of Cups
-  'https://ext.same-assets.com/3736986635/3943504748.jpeg', // King of Cups
-  'https://ext.same-assets.com/3736986635/277431083.jpeg'   // The Hermit
-];
-
-const Tarot5Karty = () => {
+const Tarot5Kart = () => {
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
   const [isReading, setIsReading] = useState(false);
   const [showReading, setShowReading] = useState(false);
+  const [revealedCards, setRevealedCards] = useState<TarotCard[]>([]);
+  const [aiReading, setAiReading] = useState<string>('');
+  const [isLoadingFullReading, setIsLoadingFullReading] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [showUserForm, setShowUserForm] = useState(false);
+
+  // User form data
+  const [formData, setFormData] = useState({
+    name: '',
+    surname: '',
+    email: '',
+    birthDate: '',
+    question: ''
+  });
 
   const requiredCards = 5;
+  const positions = ['Sytuacja', 'Przeszkoda', 'Świadomość', 'Nieświadomość', 'Rada'];
 
   const handleCardSelect = (cardIndex: number) => {
     if (selectedCards.includes(cardIndex)) {
@@ -29,86 +37,314 @@ const Tarot5Karty = () => {
     }
   };
 
-  const handleRevealCards = () => {
+  const handleRevealCards = async () => {
     if (selectedCards.length === requiredCards) {
       setIsReading(true);
+      const cards = getCardsByIds(selectedCards);
+      setRevealedCards(cards);
+      
       setTimeout(() => {
         setShowReading(true);
+        setShowUserForm(true);
         setIsReading(false);
-      }, 2000);
+      }, 1500);
     }
   };
 
-  const RevealedCard = ({ index, image }: { index: number; image?: string }) => (
-    <div className="relative w-20 h-28 rounded-lg overflow-hidden shadow-lg">
-      {image ? (
-        <img
-          src={image}
-          alt={`Tarot card ${index + 1}`}
-          className="w-full h-full object-cover"
-        />
-      ) : (
-        <div className="w-full h-full bg-gray-800 border-2 border-dashed border-gray-400 rounded-lg flex items-center justify-center">
-          <div className="w-6 h-6 border border-gray-500 rounded-full flex items-center justify-center">
-            <div className="w-3 h-3 bg-gray-600 rounded-full"></div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleGetFullReading = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name.trim() || !formData.birthDate) {
+      alert('Proszę podać imię i datę urodzenia');
+      return;
+    }
+
+    // Create user profile with zodiac data
+    const profile = createUserProfile(
+      formData.name,
+      formData.surname,
+      formData.email,
+      formData.birthDate
+    );
+    setUserProfile(profile);
+    setIsLoadingFullReading(true);
+
+    try {
+      const response = await fetch('/api/ai-reading', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          birthdate: formData.birthDate,
+          question: formData.question || 'Proszę o ogólną interpretację wylosowanych kart w kontekście mojego życia.',
+          cardIds: selectedCards,
+          language: 'PL',
+          astrologicalContext: getAstrologicalContext(profile),
+          spreadType: '5-card-cross',
+          positions: positions
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.answer) {
+        setAiReading(data.answer);
+        setShowUserForm(false);
+      } else {
+        setAiReading('Przepraszam, nie udało się wygenerować wróżby. Spróbuj ponownie.');
+      }
+    } catch (error) {
+      console.error('Error getting reading:', error);
+      setAiReading('Wystąpił błąd podczas generowania wróżby. Spróbuj ponownie.');
+    } finally {
+      setIsLoadingFullReading(false);
+    }
+  };
+
+  const handleReset = () => {
+    setSelectedCards([]);
+    setShowReading(false);
+    setRevealedCards([]);
+    setAiReading('');
+    setFormData({ name: '', surname: '', email: '', birthDate: '', question: '' });
+    setUserProfile(null);
+    setShowUserForm(false);
+  };
 
   if (showReading) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-slate-50">
         <Header />
-        <main className="section-padding bg-beige">
-          <div className="container-max">
+        <main className="py-12 px-4">
+          <div className="max-w-5xl mx-auto">
             <div className="text-center mb-8">
               <h1 className="font-playfair text-3xl lg:text-4xl text-gray-900 mb-4">
-                Oto Twój rozkład kart
+                Oto Twój rozkład 5 kart
               </h1>
-              <p className="text-gray-600 mb-8">
+              <button 
+                onClick={handleReset}
+                className="text-gray-600 underline hover:text-gray-800 transition-colors text-sm"
+              >
                 CHCESZ WYLOSOWAĆ INNE KARTY? KLIKNIJ TUTAJ
-              </p>
+              </button>
             </div>
 
-            {/* Revealed Cards */}
-            <div className="flex justify-center space-x-4 mb-12">
-              {selectedCards.slice(0, 5).map((cardIndex, i) => (
-                <RevealedCard key={cardIndex} index={i} image={sampleCards[i]} />
-              ))}
-            </div>
+            {/* Revealed Cards in Cross Layout */}
+            <div className="bg-white rounded-xl p-8 shadow-sm mb-8">
+              <div className="flex flex-col items-center gap-4">
+                {/* Top card */}
+                <div className="text-center">
+                  <p className="text-xs text-slate-500 mb-2">{positions[0]}</p>
+                  <div className="w-20 h-28 bg-gradient-to-br from-purple-900 to-indigo-900 rounded-lg flex items-center justify-center shadow-lg border border-purple-500/30">
+                    <span className="text-purple-300 text-2xl">✦</span>
+                  </div>
+                  {revealedCards[0] && (
+                    <p className="text-xs text-slate-700 mt-2 font-medium">{revealedCards[0].namePL}</p>
+                  )}
+                </div>
 
-            {/* Reading Results */}
-            <div className="max-w-4xl mx-auto bg-white rounded-lg p-8 shadow-sm">
-              <h2 className="font-playfair text-2xl text-gray-900 mb-6 text-center">
-                Twój osobisty rozkład tarota:
-              </h2>
+                {/* Middle row */}
+                <div className="flex items-center gap-6">
+                  {/* Left */}
+                  <div className="text-center">
+                    <p className="text-xs text-slate-500 mb-2">{positions[1]}</p>
+                    <div className="w-20 h-28 bg-gradient-to-br from-purple-900 to-indigo-900 rounded-lg flex items-center justify-center shadow-lg border border-purple-500/30">
+                      <span className="text-purple-300 text-2xl">✦</span>
+                    </div>
+                    {revealedCards[1] && (
+                      <p className="text-xs text-slate-700 mt-2 font-medium">{revealedCards[1].namePL}</p>
+                    )}
+                  </div>
 
-              <div className="space-y-4 text-gray-600 mb-8">
-                <p><strong>SIEDEM MIECZY:</strong> Spryt i strategia pomogą Ci osiągnąć cel, dbałoś rozwazenie, ale również nie oszukuje.</p>
-                <p><strong>DWA BUŁAW:</strong> Plany i decyzje czasu na wspór długi, który wprowadzi Cię do celu.</p>
-                <p><strong>DZIEWIĘĆ MONET:</strong> Dziedzictwo i stabilności materialne otwierają nowe rozkłady, co pozwolisz po sobie?</p>
-                <p><strong>DZIEWIĘĆ MIECZY:</strong> Lęki, niepewność i koszmar w związku.</p>
-                <p><strong>DZIEWIĘĆ KIELICHÓW:</strong> Twoje pragnienia się na wysycisiejsce rai, ale czy to jest przynosi Ci szczęściet?</p>
+                  {/* Center (horizontal) */}
+                  <div className="text-center">
+                    <p className="text-xs text-slate-500 mb-2">{positions[2]}</p>
+                    <div className="w-28 h-20 bg-gradient-to-br from-purple-900 to-indigo-900 rounded-lg flex items-center justify-center shadow-lg border border-purple-500/30">
+                      <span className="text-purple-300 text-2xl">✦</span>
+                    </div>
+                    {revealedCards[2] && (
+                      <p className="text-xs text-slate-700 mt-2 font-medium">{revealedCards[2].namePL}</p>
+                    )}
+                  </div>
+
+                  {/* Right */}
+                  <div className="text-center">
+                    <p className="text-xs text-slate-500 mb-2">{positions[3]}</p>
+                    <div className="w-20 h-28 bg-gradient-to-br from-purple-900 to-indigo-900 rounded-lg flex items-center justify-center shadow-lg border border-purple-500/30">
+                      <span className="text-purple-300 text-2xl">✦</span>
+                    </div>
+                    {revealedCards[3] && (
+                      <p className="text-xs text-slate-700 mt-2 font-medium">{revealedCards[3].namePL}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Bottom card */}
+                <div className="text-center">
+                  <p className="text-xs text-slate-500 mb-2">{positions[4]}</p>
+                  <div className="w-20 h-28 bg-gradient-to-br from-purple-900 to-indigo-900 rounded-lg flex items-center justify-center shadow-lg border border-purple-500/30">
+                    <span className="text-purple-300 text-2xl">✦</span>
+                  </div>
+                  {revealedCards[4] && (
+                    <p className="text-xs text-slate-700 mt-2 font-medium">{revealedCards[4].namePL}</p>
+                  )}
+                </div>
               </div>
+            </div>
 
-              <div className="text-center">
-                <p className="text-gray-600 italic mb-6">
-                  Chcesz wiedzieć co ta karty oznaczają konkretnie dla Ciebie? Przeprowę pełną interpretację, która rozjaśni Twoją sytuację.
+            {/* User Profile Info */}
+            {userProfile && (
+              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 mb-8 border border-indigo-100">
+                <h3 className="font-playfair text-lg text-gray-900 mb-4 flex items-center gap-2">
+                  <span>🌟</span> Twój profil astrologiczny
+                </h3>
+                <div className="grid md:grid-cols-3 gap-4 text-sm">
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <p className="text-slate-500 mb-1">Znak zodiaku</p>
+                    <p className="font-semibold text-slate-800">{userProfile.zodiacSign}</p>
+                    <p className="text-xs text-slate-400">{zodiacData[userProfile.zodiacSign].dateRange}</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <p className="text-slate-500 mb-1">Żywioł</p>
+                    <p className="font-semibold text-slate-800">{userProfile.element}</p>
+                    <p className="text-xs text-slate-400">Planeta: {userProfile.rulingPlanet}</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <p className="text-slate-500 mb-1">Liczba życia</p>
+                    <p className="font-semibold text-slate-800">{userProfile.numerologyNumber}</p>
+                    <p className="text-xs text-slate-400">Numerologia</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* AI Reading Result */}
+            {aiReading && (
+              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-8 mb-8 border border-purple-200">
+                <h3 className="font-playfair text-xl text-gray-900 mb-4 flex items-center gap-2">
+                  <span>✨</span> Twoja osobista interpretacja
+                </h3>
+                <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                  {aiReading}
+                </div>
+              </div>
+            )}
+
+            {/* User Form */}
+            {showUserForm && !aiReading && (
+              <div className="bg-white rounded-xl p-8 shadow-sm">
+                <h3 className="font-playfair text-xl text-gray-900 mb-2 text-center">
+                  Otrzymaj spersonalizowaną interpretację
+                </h3>
+                <p className="text-gray-600 text-center mb-6 text-sm">
+                  Podaj swoje dane, aby Wróżka Helena mogła uwzględnić Twój znak zodiaku, 
+                  numerologię i wpływ planet w interpretacji kart.
                 </p>
-                <form className="space-y-4 max-w-lg mx-auto">
-                  <textarea
-                    placeholder="Zadaj pytanie lub opisz, co Cię nurtuje..."
-                    className="form-input h-32"
-                    rows={6}
-                  />
-                  <button className="btn-primary w-full">
-                    Odkryj pełne znaczenie kart (80zł) →
+
+                <form onSubmit={handleGetFullReading} className="max-w-lg mx-auto space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Imię *</label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleFormChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Nazwisko</label>
+                      <input
+                        type="text"
+                        name="surname"
+                        value={formData.surname}
+                        onChange={handleFormChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Data urodzenia *</label>
+                    <input
+                      type="date"
+                      name="birthDate"
+                      value={formData.birthDate}
+                      onChange={handleFormChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      Potrzebna do określenia Twojego znaku zodiaku i liczby numerologicznej
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">E-mail</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleFormChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Twoje pytanie (opcjonalne)</label>
+                    <textarea
+                      name="question"
+                      value={formData.question}
+                      onChange={handleFormChange}
+                      rows={4}
+                      placeholder="Opisz swoją sytuację lub zadaj pytanie..."
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoadingFullReading}
+                    className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-4 rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoadingFullReading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                        <span>Wróżka Helena analizuje Twój horoskop...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>✨</span>
+                        <span>Odkryj pełne znaczenie kart</span>
+                      </>
+                    )}
                   </button>
                 </form>
               </div>
-            </div>
+            )}
+
+            {/* New Reading Button */}
+            {aiReading && (
+              <div className="text-center">
+                <button 
+                  onClick={handleReset}
+                  className="bg-gray-800 text-white px-8 py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                >
+                  Wylosuj nowe karty
+                </button>
+              </div>
+            )}
           </div>
         </main>
         <Footer />
@@ -117,81 +353,76 @@ const Tarot5Karty = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white">
       <Header />
-      <main className="section-padding bg-white">
-        <div className="container-max">
+      <main className="py-12 px-4">
+        <div className="max-w-5xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <button className="bg-black text-white px-6 py-2 rounded text-sm mb-6">
+            <h1 className="font-playfair text-3xl lg:text-4xl text-gray-900 mb-4 italic">
+              Rozkład Tarota z 5 kart
+            </h1>
+            <p className="text-gray-600 max-w-2xl mx-auto mb-6">
+              Rozkład krzyża — pięć kart ukazujących sytuację, przeszkody, 
+              świadomość, podświadomość i radę na przyszłość.
+            </p>
+            <button className="bg-black text-white px-6 py-2 rounded text-sm mb-2">
               Zamów rozkład
             </button>
-            <p className="text-gray-500 text-sm mb-8">
-              lub wylosuj karty poniżej
-            </p>
-
-            <h1 className="font-playfair text-3xl lg:text-4xl text-gray-900 mb-6 italic">
-              Oto Twój rozkład kart
-            </h1>
-            <p className="text-gray-600 text-sm mb-8">
-              CHCESZ WYLOSOWAĆ INNE KARTY? KLIKNIJ TUTAJ
-            </p>
+            <p className="text-gray-500 text-sm">lub wylosuj karty poniżej</p>
           </div>
 
-          {/* Card Selection Area */}
-          <div className="bg-beige rounded-lg p-8 mb-12">
-            <div className="text-center">
-              <h2 className="font-playfair text-2xl text-gray-900 mb-6 italic">
-                Weź głęboki oddech i skup się na swoim pytaniu
+          {/* Cross Spread Layout */}
+          <CrossSpreadLayout
+            selectedCards={selectedCards}
+            onCardSelect={handleCardSelect}
+            onRevealCards={handleRevealCards}
+            isReading={isReading}
+            maxCards={requiredCards}
+          />
+
+          {/* Info Section */}
+          <div className="mt-16 grid md:grid-cols-2 gap-12">
+            <div>
+              <span className="text-sm text-gray-500 italic">Tarot — Rozkład 5 Kart</span>
+              <h2 className="font-playfair text-2xl font-bold text-gray-900 mt-2 mb-4">
+                Poznaj pełny obraz sytuacji
               </h2>
-
-              <h3 className="text-gray-600 text-lg mb-8">
-                WYBIERZ 5 KART
-              </h3>
-
-              {/* Selected card positions */}
-              <div className="flex justify-center space-x-4 mb-8">
-                {Array.from({ length: 5 }, (_, i) => (
-                  <RevealedCard
-                    key={i}
-                    index={i}
-                    image={selectedCards.length > i ? sampleCards[i] : undefined}
-                  />
-                ))}
-              </div>
-
-              {/* Scrollable Deck */}
-              <TarotCardDeck
-                selectedCards={selectedCards}
-                onCardSelect={handleCardSelect}
-                requiredCards={requiredCards}
-                onRevealCards={handleRevealCards}
-                isReading={isReading}
-              />
+              <p className="text-gray-600 leading-relaxed mb-6">
+                Rozkład 5 kart to głębsza analiza Twojej sytuacji. Każda pozycja 
+                ma swoje znaczenie i razem tworzą kompleksowy obraz tego, 
+                co dzieje się w Twoim życiu.
+              </p>
+              <ul className="space-y-3 text-gray-600 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">1.</span>
+                  <span><strong>Sytuacja</strong> — obecny stan rzeczy</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">2.</span>
+                  <span><strong>Przeszkoda</strong> — co stoi na drodze</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">3.</span>
+                  <span><strong>Świadomość</strong> — co wiesz o sytuacji</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">4.</span>
+                  <span><strong>Nieświadomość</strong> — ukryte wpływy</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">5.</span>
+                  <span><strong>Rada</strong> — zalecane działanie</span>
+                </li>
+              </ul>
             </div>
-          </div>
-
-          {/* Bottom Info Section */}
-          <div className="max-w-4xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-12">
-              <div>
-                <p className="text-gray-600 text-sm mb-4 italic">
-                  Tarot — Rozkład 5 Kart
+            <div className="flex items-center justify-center">
+              <div className="bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-8">
+                <p className="text-gray-600 text-center italic">
+                  "Pięć kart to pięć drzwi do zrozumienia. 
+                  Za każdymi kryje się część prawdy o Twojej ścieżce."
                 </p>
-                <h3 className="font-playfair text-xl font-bold text-gray-900 mb-4">
-                  Odkryj pełny obraz swojej sytuacji
-                </h3>
-                <p className="text-gray-600 leading-relaxed text-sm">
-                  Miłość to jedno z najważniejszych sfer naszego życia, ale i źródło wielu pytań i wątpliwości. Jak rozważyć sprawę uczuciowe?
-                </p>
-              </div>
-              <div className="flex justify-center">
-                <div className="w-64 h-40 bg-gray-800 rounded-lg flex items-center justify-center">
-                  <div className="text-white text-center">
-                    <div className="w-16 h-16 bg-gray-600 rounded-lg mx-auto mb-2"></div>
-                    <p className="text-sm">Tarot Cards</p>
-                  </div>
-                </div>
+                <p className="text-gray-500 text-sm text-center mt-4">— Wróżka Helena</p>
               </div>
             </div>
           </div>
@@ -202,4 +433,4 @@ const Tarot5Karty = () => {
   );
 };
 
-export default Tarot5Karty;
+export default Tarot5Kart;

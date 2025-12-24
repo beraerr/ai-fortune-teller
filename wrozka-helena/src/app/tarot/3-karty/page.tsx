@@ -4,13 +4,20 @@ import { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import EnhancedTarotDeck from '@/components/EnhancedTarotDeck';
+import { getCardsByIds, type TarotCard } from '@/lib/tarotDeck';
 
 const Tarot3Karty = () => {
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
   const [isReading, setIsReading] = useState(false);
   const [showReading, setShowReading] = useState(false);
+  const [revealedCards, setRevealedCards] = useState<TarotCard[]>([]);
+  const [aiReading, setAiReading] = useState<string>('');
+  const [userQuestion, setUserQuestion] = useState('');
+  const [userName, setUserName] = useState('');
+  const [isLoadingFullReading, setIsLoadingFullReading] = useState(false);
 
   const requiredCards = 3;
+  const positions = ['Przeszłość', 'Teraźniejszość', 'Przyszłość'];
 
   const handleCardSelect = (cardIndex: number) => {
     if (selectedCards.includes(cardIndex)) {
@@ -23,13 +30,65 @@ const Tarot3Karty = () => {
   const handleRevealCards = async () => {
     if (selectedCards.length === requiredCards) {
       setIsReading(true);
-
-      // Simulate AI reading generation
+      
+      // Get the actual card data
+      const cards = getCardsByIds(selectedCards);
+      setRevealedCards(cards);
+      
+      // Short delay for the reveal animation
       setTimeout(() => {
         setShowReading(true);
         setIsReading(false);
-      }, 3000);
+      }, 1500);
     }
+  };
+
+  const handleGetFullReading = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!userName.trim()) {
+      alert('Proszę podać imię');
+      return;
+    }
+
+    setIsLoadingFullReading(true);
+
+    try {
+      const response = await fetch('/api/ai-reading', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: userName,
+          question: userQuestion || 'Proszę o ogólną interpretację wylosowanych kart.',
+          cardIds: selectedCards,
+          language: 'PL',
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.answer) {
+        setAiReading(data.answer);
+      } else {
+        setAiReading('Przepraszam, nie udało się wygenerować wróżby. Spróbuj ponownie.');
+      }
+    } catch (error) {
+      console.error('Error getting reading:', error);
+      setAiReading('Wystąpił błąd podczas generowania wróżby. Spróbuj ponownie.');
+    } finally {
+      setIsLoadingFullReading(false);
+    }
+  };
+
+  const handleReset = () => {
+    setSelectedCards([]);
+    setShowReading(false);
+    setRevealedCards([]);
+    setAiReading('');
+    setUserQuestion('');
+    setUserName('');
   };
 
   if (showReading) {
@@ -43,7 +102,10 @@ const Tarot3Karty = () => {
                 Oto Twój rozkład kart
               </h1>
               <p className="text-gray-600 mb-8">
-                <button className="underline hover:text-gray-800 transition-colors">
+                <button 
+                  onClick={handleReset}
+                  className="underline hover:text-gray-800 transition-colors"
+                >
                   CHCESZ WYLOSOWAĆ INNE KARTY? KLIKNIJ TUTAJ
                 </button>
               </p>
@@ -52,38 +114,86 @@ const Tarot3Karty = () => {
             {/* Reading Results */}
             <div className="max-w-4xl mx-auto bg-white rounded-lg p-8 shadow-sm">
               <div className="grid md:grid-cols-3 gap-8 mb-8">
-                <div className="text-center">
-                  <h3 className="font-semibold text-gray-700 mb-2">Przeszłość</h3>
-                  <div className="w-20 h-32 mx-auto bg-gray-800 rounded-lg mb-4"></div>
-                  <p className="text-sm text-gray-600">AS MIECZY - Jasność myślenia, nowe możliwości</p>
-                </div>
-                <div className="text-center">
-                  <h3 className="font-semibold text-gray-700 mb-2">Teraźniejszość</h3>
-                  <div className="w-20 h-32 mx-auto bg-gray-800 rounded-lg mb-4"></div>
-                  <p className="text-sm text-gray-600">TRÓJKA KIELICHÓW - Radość, przyjaźń, świętowanie</p>
-                </div>
-                <div className="text-center">
-                  <h3 className="font-semibold text-gray-700 mb-2">Przyszłość</h3>
-                  <div className="w-20 h-32 mx-auto bg-gray-800 rounded-lg mb-4"></div>
-                  <p className="text-sm text-gray-600">SŁOŃCE - Sukces, radość, spełnienie</p>
-                </div>
+                {revealedCards.map((card, index) => (
+                  <div key={card.id} className="text-center">
+                    <h3 className="font-semibold text-gray-700 mb-2">{positions[index]}</h3>
+                    <div className="w-24 h-36 mx-auto bg-gradient-to-br from-purple-900 to-indigo-900 rounded-lg mb-4 flex items-center justify-center shadow-lg border-2 border-yellow-500/30">
+                      <span className="text-yellow-400 text-3xl">✦</span>
+                    </div>
+                    <p className="text-sm font-medium text-gray-800 mb-1">{card.namePL}</p>
+                    <p className="text-xs text-gray-500">{card.meaningUpright}</p>
+                  </div>
+                ))}
               </div>
 
-              <div className="text-center">
-                <p className="text-gray-600 italic mb-6">
-                  Chcesz wiedzieć co te karty oznaczają konkretnie dla Ciebie? Przeprowę pełną interpretację, która rozjaśni Twoją sytuację.
-                </p>
-                <form className="space-y-4 max-w-lg mx-auto">
-                  <textarea
-                    placeholder="Zadaj pytanie lub opisz, co Cię nurtuje..."
-                    className="form-input h-32"
-                    rows={6}
-                  />
-                  <button className="btn-primary w-full">
-                    Odkryj pełne znaczenie kart (50zł) →
+              {/* AI Reading Result */}
+              {aiReading && (
+                <div className="mb-8 p-6 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
+                  <h3 className="font-playfair text-xl text-gray-900 mb-4 flex items-center gap-2">
+                    <span>✨</span> Twoja osobista interpretacja
+                  </h3>
+                  <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {aiReading}
+                  </div>
+                </div>
+              )}
+
+              {/* Request Full Reading Form */}
+              {!aiReading && (
+                <div className="text-center">
+                  <p className="text-gray-600 italic mb-6">
+                    Chcesz wiedzieć co te karty oznaczają konkretnie dla Ciebie? 
+                    Wróżka Helena przeprowadzi pełną interpretację, która rozjaśni Twoją sytuację.
+                  </p>
+                  <form onSubmit={handleGetFullReading} className="space-y-4 max-w-lg mx-auto">
+                    <input
+                      type="text"
+                      placeholder="Twoje imię..."
+                      value={userName}
+                      onChange={(e) => setUserName(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 text-gray-800"
+                      required
+                    />
+                    <textarea
+                      placeholder="Zadaj pytanie lub opisz, co Cię nurtuje... (opcjonalne)"
+                      value={userQuestion}
+                      onChange={(e) => setUserQuestion(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 resize-none text-gray-800"
+                      rows={4}
+                    />
+                    <button 
+                      type="submit"
+                      disabled={isLoadingFullReading}
+                      className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-4 rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isLoadingFullReading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                          <span>Wróżka Helena czyta karty...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>✨</span>
+                          <span>Odkryj pełne znaczenie kart</span>
+                          <span>→</span>
+                        </>
+                      )}
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* New Reading Button */}
+              {aiReading && (
+                <div className="text-center mt-6">
+                  <button 
+                    onClick={handleReset}
+                    className="bg-gray-800 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                  >
+                    Wylosuj nowe karty
                   </button>
-                </form>
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </main>
@@ -104,7 +214,7 @@ const Tarot3Karty = () => {
             </h1>
             <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed mb-8">
               Rozkład Tarota na przyszłość — <strong>wylosuj trzy karty Tarota</strong> i poznaj ich znaczenie:
-              <em>przeszłość, teraźniejszość i przyszłość</em>.
+              <em> przeszłość, teraźniejszość i przyszłość</em>.
             </p>
 
             <div className="mb-12">

@@ -25,7 +25,7 @@ const PricingSection = () => {
   ];
 
   return (
-    <section className="bg-beige section-padding">
+    <section className="bg-white section-padding">
       <div className="container-max">
         {/* Header */}
         <div className="text-center mb-16">
