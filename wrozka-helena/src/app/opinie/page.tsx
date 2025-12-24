@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -411,15 +412,15 @@ const OpiniePage = () => {
                     Praktyczna wiedza dla Twojego rozwoju.
                   </p>
                   <div className="space-y-2 text-sm">
-                    <a href="/blog/jak-zadawac-pytania-wrozce" className="block text-gray-700 hover:text-black underline">
+                    <Link href="/blog/jak-zadawac-pytania-wrozce" className="block text-gray-700 hover:text-black underline">
                       Jak zadawać pytania wróżce
-                    </a>
-                    <a href="/blog/jak-rozwijac-intuicje" className="block text-gray-700 hover:text-black underline">
+                    </Link>
+                    <Link href="/blog/jak-rozwijac-intuicje" className="block text-gray-700 hover:text-black underline">
                       Jak rozwijać swoją intuicję
-                    </a>
-                    <a href="/blog/jak-wzmocnic-zwiazek" className="block text-gray-700 hover:text-black underline">
+                    </Link>
+                    <Link href="/blog/jak-wzmocnic-zwiazek" className="block text-gray-700 hover:text-black underline">
                       Jak wzmocnić związek
-                    </a>
+                    </Link>
                   </div>
                 </div>
 
@@ -429,15 +430,15 @@ const OpiniePage = () => {
                     Tematy na blogu
                   </h3>
                   <div className="space-y-2 text-sm">
-                    <a href="/blog/duchowość" className="block text-gray-700 hover:text-black">
+                    <Link href="/blog/duchowosc" className="block text-gray-700 hover:text-black">
                       duchowość <span className="text-gray-500">(2)</span>
-                    </a>
-                    <a href="/blog/ezoteryka" className="block text-gray-700 hover:text-black">
+                    </Link>
+                    <Link href="/blog/ezoteryka" className="block text-gray-700 hover:text-black">
                       ezoteryka <span className="text-gray-500">(7)</span>
-                    </a>
-                    <a href="/blog/miłość" className="block text-gray-700 hover:text-black">
+                    </Link>
+                    <Link href="/blog/milosc" className="block text-gray-700 hover:text-black">
                       miłość <span className="text-gray-500">(5)</span>
-                    </a>
+                    </Link>
                   </div>
                 </div>
 
