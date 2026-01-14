@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import CrossSpreadLayout from '@/components/CrossSpreadLayout';
 import { getCardsByIds, type TarotCard } from '@/lib/tarotDeck';
 import { createUserProfile, getAstrologicalContext, zodiacData, type UserProfile } from '@/lib/seedData';
+import { handlePayment, PACKAGE_TYPES } from '@/lib/stripe';
 
 const Tarot5Kart = () => {
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
@@ -205,7 +206,7 @@ const Tarot5Kart = () => {
             {userProfile && (
               <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 mb-8 border border-indigo-100">
                 <h3 className="font-playfair text-lg text-gray-900 mb-4 flex items-center gap-2">
-                  <span>🌟</span> Twój profil astrologiczny
+                  Twój profil astrologiczny
                 </h3>
                 <div className="grid md:grid-cols-3 gap-4 text-sm">
                   <div className="bg-white rounded-lg p-4 shadow-sm">
@@ -231,7 +232,7 @@ const Tarot5Kart = () => {
             {aiReading && (
               <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-8 mb-8 border border-purple-200">
                 <h3 className="font-playfair text-xl text-gray-900 mb-4 flex items-center gap-2">
-                  <span>✨</span> Twoja osobista interpretacja
+                  Twoja osobista interpretacja
                 </h3>
                 <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
                   {aiReading}
@@ -325,8 +326,7 @@ const Tarot5Kart = () => {
                       </>
                     ) : (
                       <>
-                        <span>✨</span>
-                        <span>Odkryj pełne znaczenie kart</span>
+                        Odkryj pełne znaczenie kart
                       </>
                     )}
                   </button>
@@ -366,7 +366,10 @@ const Tarot5Kart = () => {
               Rozkład krzyża — pięć kart ukazujących sytuację, przeszkody, 
               świadomość, podświadomość i radę na przyszłość.
             </p>
-            <button className="bg-black text-white px-6 py-2 rounded text-sm mb-2">
+            <button 
+              className="bg-black text-white px-6 py-2 rounded text-sm mb-2"
+              onClick={() => handlePayment(PACKAGE_TYPES['5-cards'])}
+            >
               Zamów rozkład
             </button>
             <p className="text-gray-500 text-sm">lub wylosuj karty poniżej</p>

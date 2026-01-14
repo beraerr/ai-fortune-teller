@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import EnhancedTarotDeck from '@/components/EnhancedTarotDeck';
 import { getCardsByIds, type TarotCard } from '@/lib/tarotDeck';
+import { handlePayment, PACKAGE_TYPES } from '@/lib/stripe';
 
 const Tarot3Karty = () => {
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
@@ -130,7 +131,7 @@ const Tarot3Karty = () => {
               {aiReading && (
                 <div className="mb-8 p-6 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
                   <h3 className="font-playfair text-xl text-gray-900 mb-4 flex items-center gap-2">
-                    <span>✨</span> Twoja osobista interpretacja
+                    Twoja osobista interpretacja
                   </h3>
                   <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
                     {aiReading}
@@ -173,9 +174,7 @@ const Tarot3Karty = () => {
                         </>
                       ) : (
                         <>
-                          <span>✨</span>
-                          <span>Odkryj pełne znaczenie kart</span>
-                          <span>→</span>
+                          Odkryj pełne znaczenie kart
                         </>
                       )}
                     </button>
@@ -218,7 +217,10 @@ const Tarot3Karty = () => {
             </p>
 
             <div className="mb-12">
-              <button className="bg-black text-white px-8 py-3 rounded text-sm font-medium mb-4">
+              <button 
+                className="bg-black text-white px-8 py-3 rounded text-sm font-medium mb-4"
+                onClick={() => handlePayment(PACKAGE_TYPES['3-cards'])}
+              >
                 Zamów rozkład
               </button>
               <p className="text-gray-500 text-sm">

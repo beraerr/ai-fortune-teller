@@ -1,5 +1,8 @@
+'use client';
+
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { handlePayment, PACKAGE_TYPES } from '@/lib/stripe';
 
 const Cennik = () => {
   const basicPackages = [
@@ -46,7 +49,7 @@ const Cennik = () => {
       price: "90zł",
       description: "Rozkład miłosny dla dwuuosobny, poznaj swoje prawdziwe serce i zbuduj szczęśliwy związek.",
       time: "Odpowiedź do 2h",
-      icon: "♥"
+      icon: "♡"
     },
     {
       title: "Krzyż Celtycki",
@@ -103,7 +106,15 @@ const Cennik = () => {
                   <p className="text-gray-600 text-sm mb-6">
                     {pkg.description}
                   </p>
-                  <button className="btn-primary w-full mb-4">
+                  <button 
+                    className="btn-primary w-full mb-4"
+                    onClick={() => {
+                      const packageType = index === 0 ? PACKAGE_TYPES['1-question'] :
+                                       index === 1 ? PACKAGE_TYPES['3-questions'] :
+                                       PACKAGE_TYPES['5-questions'];
+                      handlePayment(packageType);
+                    }}
+                  >
                     Zamów wróżbę
                   </button>
                   <p className="text-gray-500 text-sm">
@@ -153,7 +164,16 @@ const Cennik = () => {
                   <p className="text-gray-600 text-sm mb-6 leading-relaxed">
                     {pkg.description}
                   </p>
-                  <button className="btn-primary w-full mb-4">
+                  <button 
+                    className="btn-primary w-full mb-4"
+                    onClick={() => {
+                      const packageType = index === 0 ? PACKAGE_TYPES['3-cards'] :
+                                       index === 1 ? PACKAGE_TYPES['5-cards'] :
+                                       index === 2 ? PACKAGE_TYPES['love-tarot'] :
+                                       PACKAGE_TYPES['celtic-cross'];
+                      handlePayment(packageType);
+                    }}
+                  >
                     Zamów rozkład
                   </button>
                   <p className="text-gray-500 text-sm">
@@ -185,7 +205,10 @@ const Cennik = () => {
                   <p className="text-gray-600 text-sm mb-6 leading-relaxed">
                     {pkg.description}
                   </p>
-                  <button className="btn-primary w-full mb-4">
+                  <button 
+                    className="btn-primary w-full mb-4"
+                    onClick={() => handlePayment(PACKAGE_TYPES['yearly'])}
+                  >
                     Zamów rozkład
                   </button>
                   <p className="text-gray-500 text-sm">

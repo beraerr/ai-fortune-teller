@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import TarotCardDeck from '@/components/TarotCardDeck';
+import { handlePayment, PACKAGE_TYPES } from '@/lib/stripe';
 
 const TarotMilosny = () => {
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
@@ -189,7 +190,7 @@ const TarotMilosny = () => {
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="font-playfair text-3xl lg:text-4xl text-gray-900 mb-6">
-              Tarot miłosny ❤️ rozkład partnerski
+              Tarot miłosny - rozkład partnerski
             </h1>
             <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Zrozum swoje emocje, poznaj intencje ukochanej osoby i odkryj, jakie kroki podjąć,
@@ -197,7 +198,10 @@ const TarotMilosny = () => {
             </p>
 
             <div className="mt-8 mb-12">
-              <button className="bg-black text-white px-8 py-3 rounded text-sm font-medium">
+              <button 
+                className="bg-black text-white px-8 py-3 rounded text-sm font-medium"
+                onClick={() => handlePayment(PACKAGE_TYPES['love-tarot'])}
+              >
                 Zamów rozkład miłosny
               </button>
               <p className="text-gray-500 text-sm mt-2">

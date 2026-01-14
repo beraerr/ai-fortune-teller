@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# documentation files (keep only README.md)
+BLIK_SETUP.md
+PAYMENT_SETUP.md
+DOMAIN_SETUP_QUICK.md
+VERCEL_SETUP.md
+netlify.toml

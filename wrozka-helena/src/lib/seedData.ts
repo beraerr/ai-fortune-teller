@@ -287,3 +287,5 @@ Dane astrologiczne klienta:
 `.trim();
 }
 
+
+

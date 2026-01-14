@@ -10,31 +10,8 @@ const HeroSection = () => {
     question: ''
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      const response = await fetch('/api/order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        alert('Dziękujemy! Wróżba wkrótce trafi na Twój e-mail.');
-        setFormData({ name: '', email: '', birthDate: '', question: '' });
-      } else {
-        alert('Wystąpił błąd. Spróbuj ponownie.');
-      }
-    } catch (error) {
-      console.error('Form submission error:', error);
-      alert('Wystąpił błąd. Spróbuj ponownie.');
-    }
-  };
+  // Form is now just for display - payment happens on pricing page
+  // Keeping form data state for potential future use
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -63,7 +40,7 @@ const HeroSection = () => {
             </p>
 
             {/* Form - MUCH WIDER INPUTS */}
-            <form onSubmit={handleSubmit} className="space-y-5 mb-10">
+            <div className="space-y-5 mb-10">
               <div>
                 <label htmlFor="name" className="block text-sm text-gray-700 mb-2">
                   Imię:
@@ -130,13 +107,16 @@ const HeroSection = () => {
 
               {/* Submit Button - WIDER */}
               <button
-                type="submit"
+                type="button"
+                onClick={() => {
+                  // Redirect to pricing page where they can select package and pay
+                  window.location.href = '/cennik';
+                }}
                 className="w-full max-w-2xl bg-gray-800 text-white px-6 py-4 rounded font-medium hover:bg-gray-700 transition-colors duration-200 flex items-center justify-center space-x-2 text-base uppercase tracking-wide"
               >
                 <span>Zamów wróżbę</span>
-                <span className="text-lg">✨</span>
               </button>
-            </form>
+            </div>
 
             {/* Moon Phases */}
             <div className="flex justify-center mt-10">

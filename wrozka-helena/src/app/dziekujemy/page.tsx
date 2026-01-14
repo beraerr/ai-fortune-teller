@@ -1,8 +1,11 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import { Suspense } from 'react';
+import PaymentStatus from '@/components/PaymentStatus';
 
-const ThankYouPage = () => {
+const ThankYouPage = async ({ searchParams }: { searchParams: Promise<{ session_id?: string }> }) => {
+  const params = await searchParams;
   return (
     <div className="min-h-screen">
       <Header />
@@ -18,6 +21,10 @@ const ThankYouPage = () => {
             <h1 className="font-playfair text-3xl lg:text-4xl text-gray-900 mb-6">
               Dziękujemy za zamówienie!
             </h1>
+
+            <Suspense fallback={<p className="text-gray-600 leading-relaxed mb-8">Weryfikowanie płatności...</p>}>
+              <PaymentStatus sessionId={params.session_id} />
+            </Suspense>
 
             <p className="text-gray-600 leading-relaxed mb-8">
               Twoje zamówienie zostało pomyślnie przyjęte. Wróżba wkrótce trafi na Twój e-mail.

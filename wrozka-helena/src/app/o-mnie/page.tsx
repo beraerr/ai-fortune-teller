@@ -1,3 +1,5 @@
+'use client';
+
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -31,19 +33,19 @@ const OMnie = () => {
             <div className="space-y-8 text-gray-600 leading-relaxed">
               <p>
                 Od lat pomagam ludziom odkrywać ich prawdziwy potencjał i odnajdywać szczęście.
-                Posiadam dar jasnowidz enia i bogate doświadczenie wróżbiarskie, co pozwala mi na
+                Posiadam dar jasnowidzenia i bogate doświadczenie wróżbiarskie, co pozwala mi na
                 głębokie zrozumienie ludzkich problemów i trafne przewidywanie przyszłości.
               </p>
 
               <p>
-                Z moją pomocą podejmiesz wszystkie przeciwtłości losu, podejmiesz mądre decyzje i
-                osiągniesz swoje cele. Odkrywasz sekrety swojej przeszłości, teraźniejszości i
+                Z moją pomocą pokonasz przeciwności losu, podejmiesz mądre decyzje i
+                osiągniesz swoje cele. Odkryjesz sekrety swojej przeszłości, teraźniejszości i
                 przyszłości, a także poznasz swoje prawdziwe przeznaczenie.
               </p>
 
               <p>
-                Jestem empatyczna i gościnna zadania osobą, która zawsze kieruje się dobrem swoich
-                klientów. Sawi zadowolonych osób posłać moje usługi.
+                Jestem empatyczną i doświadczoną osobą, która zawsze kieruje się dobrem swoich
+                klientów. Setki zadowolonych osób korzysta z moich usług.
               </p>
 
               <p>
@@ -52,7 +54,7 @@ const OMnie = () => {
               </p>
 
               <p>
-                Odbierz magię wróżb i otwórz się na nowe możliwości!
+                Zapraszam Cię do odkrycia magii wróżb i otwarcia się na nowe możliwości.
               </p>
             </div>
 
@@ -62,11 +64,11 @@ const OMnie = () => {
                 Gotowa na odkrycie swojej przyszłości?
               </h3>
               <p className="text-gray-600 mb-6">
-                Nie czekaj dłużej – poznaj odpowiedzi na nurtujące Cię pytania już dziś!
+                Poznaj odpowiedzi na nurtujące Cię pytania.
               </p>
-              <button className="btn-primary">
-                Zamów wróżbę już dziś!
-              </button>
+              <a href="/cennik" className="btn-primary inline-block">
+                Zamów wróżbę
+              </a>
             </div>
           </div>
         </div>

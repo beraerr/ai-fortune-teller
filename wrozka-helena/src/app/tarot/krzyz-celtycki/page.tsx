@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { handlePayment, PACKAGE_TYPES } from '@/lib/stripe';
 
 const KrzyzCeltycki = () => {
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
