@@ -1,6 +1,17 @@
-export const handlePayment = async (packageType: string, customerEmail?: string, customerName?: string) => {
+export type PaymentMethod = 'stripe' | 'tpay';
+
+export const handlePayment = async (
+  packageType: string, 
+  customerEmail?: string, 
+  customerName?: string,
+  paymentMethod: PaymentMethod = 'stripe'
+) => {
   try {
-    const response = await fetch('/api/create-checkout', {
+    const apiEndpoint = paymentMethod === 'tpay' 
+      ? '/api/tpay/create-payment' 
+      : '/api/create-checkout';
+
+    const response = await fetch(apiEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -15,7 +26,7 @@ export const handlePayment = async (packageType: string, customerEmail?: string,
     const data = await response.json();
 
     if (data.url) {
-      // Redirect to Stripe checkout
+      // Redirect to payment checkout (Stripe or Tpay)
       window.location.href = data.url;
     } else {
       console.error('Error creating checkout:', data.error);
